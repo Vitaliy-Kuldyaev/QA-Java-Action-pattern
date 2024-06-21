@@ -1,0 +1,66 @@
+plugins {
+    id 'java'
+    id 'io.qameta.allure' version '2.9.3'
+}
+
+group 'ru.vtb'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    allure_version = '2.17.3'
+    testng_version = '6.14.3'
+    selenide_version = '6.4.0'
+}
+
+sourceCompatibility = '11'
+targetCompatibility = '11'
+
+compileJava.options.encoding = "UTF-8"
+compileTestJava.options.encoding = "UTF-8"
+
+test.doFirst {
+    jvmArgs "-Dfile.encoding=UTF-8"
+}
+
+task generateXML(type: JavaExec) {
+    group = "Execution"
+    description = "generate xml suite task"
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'generateXML.GenerateXML'
+}
+
+dependencies {
+    implementation('org.testng:testng:' + testng_version)
+    implementation('com.codeborne:selenide:' + selenide_version)
+    implementation('io.qameta.allure:allure-selenide:' + allure_version)
+    implementation group: 'io.qameta.allure', name: 'allure-testng', version: '2.17.3'
+    runtimeOnly group: 'org.aspectj', name: 'aspectjweaver', version: '1.9.9.1'
+    //testImplementation('io.github.bonigarcia:webdrivermanager:4.4.3')
+    testImplementation('org.assertj:assertj-core:3.21.0')
+    implementation group: 'org.javalite', name: 'activejdbc', version: '3.1-j11'
+    implementation group: 'org.javalite', name: 'app-config', version: '3.1-j11'
+    implementation group: 'org.postgresql', name: 'postgresql', version: '42.3.4'
+    testImplementation group: 'io.rest-assured', name: 'rest-assured', version: '5.0.1'
+    testImplementation group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.36'
+    implementation group: 'xerces', name: 'xerces', version: '2.4.0'
+}
+
+ext.testFile = System.getProperty('Test_Plan') ?: 'full.xml' // in commandline -DTest_Plan="full.xml"
+test {
+    systemProperty "allure.results.directory", "build/allure-results"
+    testLogging{
+        showStandardStreams = true
+    }
+    reports.html.enabled = false
+    ignoreFailures = true
+    //testLogging.showStandardStreams = true
+    useTestNG() {
+        outputDirectory = file("$project.buildDir//testNgOutput")
+        useDefaultListeners = true
+        suites "src/test/resources/$testFile"
+    }
+}
